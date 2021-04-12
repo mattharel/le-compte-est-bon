@@ -109,14 +109,6 @@ function App() {
         </Grid>
         <Grid item xs={4}>
           <TextField
-            label="Plaque 1"
-            value={plaque1Valeur}
-            type="number"
-            onChange={(e) => setPlaque1Valeur(parseInt(e.target.value))}
-          />
-        </Grid>
-        <Grid item xs={4}>
-          <TextField
             label="Plaque 2"
             type="number"
             value={plaque2Valeur}
