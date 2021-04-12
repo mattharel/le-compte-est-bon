@@ -1,4 +1,5 @@
 import logo from "./logo.svg";
+import { initPlaques, NOMBRE_PLAQUE } from "./util/constant";
 import "katex/dist/katex.min.css";
 import { InlineMath, BlockMath } from "react-katex";
 import { testPossible, compte } from "./util/combinaison";
@@ -11,35 +12,55 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  Select,
+  MenuItem,
   Paper,
+  Avatar,
+  Fab,
+  Divider,
 } from "@material-ui/core";
 
 import { useState } from "react";
 import { Plaque } from "./model/plaque";
 import "./App.css";
 function App() {
-  const [plaque1Valeur, setPlaque1Valeur] = useState(3);
-  const [plaque2Valeur, setPlaque2Valeur] = useState(6);
-  const [plaque3Valeur, setPlaque3Valeur] = useState(6);
-  const [plaque4Valeur, setPlaque4Valeur] = useState(7);
-  const [plaque5Valeur, setPlaque5Valeur] = useState(50);
-  const [plaque6Valeur, setPlaque6Valeur] = useState(50);
   const [but, setBut] = useState(140);
   const [bestResult, setBestResult] = useState(null);
+  const [espaceExplore, setEspaceExplore] = useState(null);
+  const [tempsTotal, setTempsTotal] = useState(null);
+
+  const [plaquesSelectionnes, setPlaquesSelectionnees] = useState([
+    4,
+    11,
+    12,
+    13,
+    22,
+    23,
+  ]);
+
+  const handleFABPlaqueChange = (index) => {
+    const newSelection = [...plaquesSelectionnes];
+
+    if (plaquesSelectionnes.includes(index)) {
+      newSelection.splice(newSelection.indexOf(index), 1);
+    } else {
+      if (plaquesSelectionnes.length >= NOMBRE_PLAQUE) {
+        newSelection.shift();
+      }
+      newSelection.push(index);
+    }
+    setPlaquesSelectionnees(newSelection);
+  };
   const handleCompte = () => {
-    let plaque1 = new Plaque(plaque1Valeur);
-    let plaque2 = new Plaque(plaque2Valeur);
-    let plaque3 = new Plaque(plaque3Valeur);
-    let plaque4 = new Plaque(plaque4Valeur);
-    let plaque5 = new Plaque(plaque5Valeur);
-    let plaque6 = new Plaque(plaque6Valeur);
+    const plaques = [];
+    for (let index = 0; index < NOMBRE_PLAQUE; index++) {
+      plaques.push(new Plaque(initPlaques[plaquesSelectionnes[index]]));
+    }
     let resultsTmp = [];
-    compte(
-      [plaque1, plaque2, plaque3, plaque4, plaque5, plaque6],
-      but,
-      resultsTmp
-    );
-    console.log(resultsTmp);
+    let nombreDAppel = [0];
+    const debut = Date.now();
+    compte(plaques, but, resultsTmp, nombreDAppel);
+    setTempsTotal(Date.now() - debut);
     let best = null;
     for (let index = 0; index < resultsTmp.length || !best; index++) {
       if (resultsTmp[index] && resultsTmp[index].length > 0) {
@@ -48,104 +69,78 @@ function App() {
         break;
       }
     }
+    setEspaceExplore(nombreDAppel[0]);
   };
+
   const handleRandom = () => {
-    const initPlaques = [
-      1,
-      1,
-      2,
-      2,
-      3,
-      3,
-      4,
-      4,
-      5,
-      5,
-      6,
-      6,
-      7,
-      7,
-      8,
-      8,
-      9,
-      9,
-      10,
-      10,
-      25,
-      25,
-      50,
-      50,
-      75,
-      75,
-      100,
-      100,
-    ];
     const plaquesChoisies = [];
-    for (let index = 0; index < 6; index++) {
-      const plaqueRandom = initPlaques.splice(
-        Math.floor(Math.random() * (initPlaques.length - 1)),
-        1
-      );
+    const echantillion = [...initPlaques];
+    for (let index = 0; index < NOMBRE_PLAQUE; index++) {
+      let plaqueRandom;
+      do {
+        plaqueRandom = Math.floor(Math.random() * (echantillion.length - 1));
+      } while (plaquesChoisies.includes(plaqueRandom));
       plaquesChoisies.push(plaqueRandom);
     }
-    setPlaque1Valeur(plaquesChoisies[0]);
-    setPlaque2Valeur(plaquesChoisies[1]);
-    setPlaque3Valeur(plaquesChoisies[2]);
-    setPlaque4Valeur(plaquesChoisies[3]);
-    setPlaque5Valeur(plaquesChoisies[4]);
-    setPlaque6Valeur(plaquesChoisies[5]);
+    setPlaquesSelectionnees(plaquesChoisies);
     setBut(100 + Math.floor(Math.random() * 899));
   };
   return (
     <Container maxWidth="sm" className="container">
       <Grid container spacing={3}>
-        <Grid item xs={4}>
-          <TextField
-            label="Plaque 1"
-            value={plaque1Valeur}
-            type="number"
-            onChange={(e) => setPlaque1Valeur(parseInt(e.target.value))}
-          />
+        <Grid item xs={12}>
+          <Grid
+            container
+            spacing={4}
+            alignItems="center"
+            direction="row"
+            justify="center"
+          >
+            {initPlaques.map((plaque, index) =>
+              plaquesSelectionnes.includes(index) ? (
+                <Grid key={index} item xs={"auto"}>
+                  <Fab
+                    key={index}
+                    aria-label={plaque}
+                    onClick={() => handleFABPlaqueChange(index)}
+                    color={"primary"}
+                  >
+                    {plaque}
+                  </Fab>
+                </Grid>
+              ) : (
+                ""
+              )
+            )}
+          </Grid>
         </Grid>
-        <Grid item xs={4}>
-          <TextField
-            label="Plaque 2"
-            type="number"
-            value={plaque2Valeur}
-            onChange={(e) => setPlaque2Valeur(parseInt(e.target.value))}
-          />
-        </Grid>
-        <Grid item xs={4}>
-          <TextField
-            label="Plaque 3"
-            value={plaque3Valeur}
-            type="number"
-            onChange={(e) => setPlaque3Valeur(parseInt(e.target.value))}
-          />
-        </Grid>
-        <Grid item xs={4}>
-          <TextField
-            label="Plaque 4"
-            value={plaque4Valeur}
-            type="number"
-            onChange={(e) => setPlaque4Valeur(parseInt(e.target.value))}
-          />
-        </Grid>
-        <Grid item xs={4}>
-          <TextField
-            label="Plaque 5"
-            value={plaque5Valeur}
-            type="number"
-            onChange={(e) => setPlaque5Valeur(parseInt(e.target.value))}
-          />
-        </Grid>
-        <Grid item xs={4}>
-          <TextField
-            label="Plaque 6"
-            value={plaque6Valeur}
-            type="number"
-            onChange={(e) => setPlaque6Valeur(parseInt(e.target.value))}
-          />
+
+        <Divider />
+        <Grid item xs={12}>
+          <Grid
+            container
+            spacing={1}
+            alignItems="center"
+            direction="row"
+            justify="center"
+          >
+            {initPlaques.map((plaque, index) =>
+              plaquesSelectionnes.includes(index) ? (
+                ""
+              ) : (
+                <Grid key={index} item xs={"auto"}>
+                  <Fab
+                    key={index}
+                    aria-label={plaque}
+                    onClick={() => handleFABPlaqueChange(index)}
+                    color={"default"}
+                  >
+                    {plaque}
+                  </Fab>
+                </Grid>
+              )
+            )}
+          </Grid>
         </Grid>
         <Grid item xs={12}>
           <TextField
@@ -170,7 +165,7 @@ function App() {
                 color="primary"
                 onClick={() => handleRandom()}
               >
-                Remplissage automatique
+                Tirage aléatoire
               </Button>
             </Grid>
             <Grid xs={4} item>
@@ -189,7 +184,8 @@ function App() {
             {bestResult && (
               <Typography variant="overline">
                 Meilleur resultat, {bestResult.valeur} ={" "}
-                <InlineMath math={bestResult.latex} />
+                <InlineMath math={bestResult.latex} />. Espace exploré :{" "}
+                {espaceExplore} états visités en {tempsTotal} ms.
               </Typography>
             )}
           </Grid>
